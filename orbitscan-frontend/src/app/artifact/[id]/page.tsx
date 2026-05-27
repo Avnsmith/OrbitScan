@@ -180,7 +180,7 @@ export default function ArtifactDetailPage() {
               <span className="text-[9px] text-steel-blue font-mono uppercase tracking-wider">HARNESS SOURCE TYPE</span>
               <span className="text-sm font-extrabold font-mono text-slate-300 mt-2.5 truncate uppercase flex items-center gap-1.5">
                 {selectedArtifact.source.replace(/_/g, ' ')}
-                {selectedArtifact.source === 'LIVE_DRAND_BEACON' ? (
+                {(selectedArtifact.source === 'SPACECOMPUTER_IPFS' || selectedArtifact.source === 'SPACECOMPUTER_API') ? (
                   <span className="px-1.5 py-0.5 text-[7px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 rounded uppercase font-bold tracking-wider animate-pulse">
                     LIVE BEACON
                   </span>
@@ -270,18 +270,23 @@ export default function ArtifactDetailPage() {
             <div className="space-y-3 text-[10px]">
               
               <div className="bg-graphite-950 p-3 rounded border border-graphite-850">
-                <span className="text-[9px] text-steel-blue block">ENCLAVE SIGNATURE PROOF</span>
-                <span className="text-xs text-slate-300 font-bold break-all block mt-1 leading-relaxed">
-                  {selectedArtifact.verificationProof?.signature || '0x_signature_pending_attestation'}
+                <span className="text-[9px] text-steel-blue block">cTRNG PROOF ORIGIN</span>
+                <span className="text-xs text-slate-300 font-bold break-all block mt-1 leading-relaxed font-mono select-all">
+                  {selectedArtifact.verificationProof?.entropyOrigin || '0x_proof_pending_attestation'}
                 </span>
               </div>
 
-              {selectedArtifact.verificationProof?.attestationRoot && (
+              {selectedArtifact.verificationProof?.verifiable && selectedArtifact.verificationProof?.beaconUrl && (
                 <div className="bg-graphite-950 p-3 rounded border border-graphite-850">
-                  <span className="text-[9px] text-steel-blue block">ATTESTATION ROOT</span>
-                  <span className="text-xs text-slate-300 font-bold break-all block mt-1 leading-relaxed">
-                    {selectedArtifact.verificationProof.attestationRoot}
-                  </span>
+                  <span className="text-[9px] text-steel-blue block">VERIFIABLE IPFS IPNS BEACON</span>
+                  <a 
+                    href={selectedArtifact.verificationProof.beaconUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] text-orbital-cyan font-bold break-all block mt-1 leading-relaxed hover:underline font-mono"
+                  >
+                    {selectedArtifact.verificationProof.beaconUrl}
+                  </a>
                 </div>
               )}
 

@@ -6,9 +6,12 @@ async function bootstrap() {
   const logger = new Logger('Bootstrap');
   const app = await NestFactory.create(AppModule);
   
-  // Enable CORS for orbital frontend connections
+  // Lock CORS to production origin or fallback to '*'
+  const allowedOrigin = process.env.ALLOWED_ORIGIN || '*';
   app.enableCors({
-    origin: '*',
+    origin: allowedOrigin,
+    methods: ['GET', 'POST', 'OPTIONS'],
+    credentials: true,
   });
 
   const port = process.env.PORT ?? 3001;

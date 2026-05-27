@@ -26,6 +26,16 @@ export class TelemetryProcessor extends WorkerHost {
       if (name === 'ingest-payload') {
         const { artifactId, entropyHash, bits, relayId, source } = data;
 
+        // Check if entropyHash already exists in the database to prevent duplicate ingestion crashes
+        const existing = this.prisma.isFallbackMode
+          ? this.prisma.artifacts.find((a) => a.entropyHash === entropyHash)
+          : await this.prisma.artifact.findUnique({ where: { entropyHash } });
+
+        if (existing) {
+          this.logger.warn(`Duplicate telemetry payload detected (entropyHash: ${entropyHash}). Skipping ingestion gracefully.`);
+          return { status: 'SKIPPED_DUPLICATE', id: existing.id };
+        }
+
         // Create PENDING artifact in DB or fallback memory
         const artifact = await this.createArtifact({
           id: artifactId,
@@ -50,7 +60,10 @@ export class TelemetryProcessor extends WorkerHost {
           relayId,
           entropyHash,
           bits,
-        }, { delay: 3000 });
+        }, { 
+          delay: 3000,
+          jobId: `verify-${entropyHash}`, // Prevent duplicate verification jobs
+        });
 
       } else if (name === 'verify-signature') {
         const { artifactId, relayId, entropyHash, bits } = data;
@@ -96,13 +109,21 @@ export class TelemetryProcessor extends WorkerHost {
       if (this.prisma.artifacts.length > 100) this.prisma.artifacts.pop();
       return data;
     }
-    return this.prisma.artifact.upsert({
-      where: { entropyHash: data.entropyHash },
-      update: {
-        verificationStatus: data.verificationStatus,
-      },
-      create: data,
-    });
+    try {
+      return await this.prisma.artifact.upsert({
+        where: { entropyHash: data.entropyHash },
+        update: {
+          verificationStatus: data.verificationStatus,
+        },
+        create: data,
+      });
+    } catch (err: any) {
+      if (err.code === 'P2002' || err.message?.includes('Unique constraint failed')) {
+        this.logger.warn(`Database race condition: duplicate entropy_hash detected (entropyHash: ${data.entropyHash}). Skipping gracefully.`);
+        return this.prisma.artifact.findUnique({ where: { entropyHash: data.entropyHash } });
+      }
+      throw err;
+    }
   }
 
   private async updateArtifactStatus(id: string, status: string): Promise<any> {

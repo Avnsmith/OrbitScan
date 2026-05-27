@@ -133,6 +133,8 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
       bits: payload.bits,
       relayId: relay.id,
       source: payload.source,
+    }, {
+      jobId: payload.entropyHash, // Prevents duplicate ingestion jobs
     });
   }
 

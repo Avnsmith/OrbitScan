@@ -538,8 +538,8 @@ export default function MissionControlDashboard() {
                           <td className="py-3 px-3 text-[10px]">
                             <div className="flex items-center gap-1.5">
                               <span className="text-slate-400 uppercase">{art.source.replace(/_/g, ' ')}</span>
-                              {art.source === 'LIVE_DRAND_BEACON' ? (
-                                <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" title="Verifiable Live Beacon Source"></span>
+                              {(art.source === 'SPACECOMPUTER_IPFS' || art.source === 'SPACECOMPUTER_API') ? (
+                                <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" title="Verifiable Live SpaceComputer cTRNG Source"></span>
                               ) : (
                                 <span className="inline-block w-1.5 h-1.5 bg-amber-500/80 rounded-full" title="Telemetry Simulator Source"></span>
                               )}
@@ -646,7 +646,7 @@ export default function MissionControlDashboard() {
                       <span className="text-graphite-500">Telemetry Source:</span>
                       <div className="flex items-center gap-1.5">
                         <span className="font-semibold text-slate-200 uppercase">{selectedArtifact.source.replace(/_/g, ' ')}</span>
-                        {selectedArtifact.source === 'LIVE_DRAND_BEACON' ? (
+                        {(selectedArtifact.source === 'SPACECOMPUTER_IPFS' || selectedArtifact.source === 'SPACECOMPUTER_API') ? (
                           <span className="px-1 py-0.5 text-[8px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 rounded uppercase font-bold tracking-wider animate-pulse flex items-center gap-1">
                             <span className="w-1 h-1 bg-emerald-400 rounded-full"></span>
                             LIVE BEACON
@@ -670,17 +670,28 @@ export default function MissionControlDashboard() {
                     <div className="border border-graphite-800 rounded bg-graphite-950/40 p-3 space-y-2">
                       <span className="text-[9px] text-steel-blue uppercase block border-b border-graphite-800/60 pb-1 font-bold">INTEGRITY ATTESTATION</span>
                       <div className="flex flex-col text-[10px] space-y-1">
-                        <span className="text-graphite-500">Signature Attestation Hash:</span>
+                        <span className="text-graphite-500">Signer Relay Vector:</span>
                         <span className="text-[9px] text-slate-400 bg-graphite-950 p-1 border border-graphite-850 rounded truncate font-mono">
-                          {selectedArtifact.verificationProof.signature}
+                          {selectedArtifact.verificationProof.signerRelay}
                         </span>
                       </div>
-                      {selectedArtifact.verificationProof.attestationRoot && (
+                      <div className="flex flex-col text-[10px] space-y-1">
+                        <span className="text-graphite-500">cTRNG Proof Origin:</span>
+                        <span className="text-[9px] text-slate-400 bg-graphite-950 p-1 border border-graphite-850 rounded truncate font-mono select-all">
+                          {selectedArtifact.verificationProof.entropyOrigin}
+                        </span>
+                      </div>
+                      {selectedArtifact.verificationProof.verifiable && selectedArtifact.verificationProof.beaconUrl && (
                         <div className="flex flex-col text-[10px] space-y-1">
-                          <span className="text-graphite-500">Attestation Merkle Root:</span>
-                          <span className="text-[9px] text-slate-400 bg-graphite-950 p-1 border border-graphite-850 rounded truncate font-mono">
-                            {selectedArtifact.verificationProof.attestationRoot}
-                          </span>
+                          <span className="text-graphite-500">Verifiable IPFS IPNS Beacon:</span>
+                          <a 
+                            href={selectedArtifact.verificationProof.beaconUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[8px] text-orbital-cyan bg-graphite-950 p-1 border border-graphite-850 rounded font-mono truncate hover:underline block"
+                          >
+                            {selectedArtifact.verificationProof.beaconUrl}
+                          </a>
                         </div>
                       )}
                       <div className="flex justify-between items-center text-[10px] pt-1">

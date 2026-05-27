@@ -13,6 +13,12 @@ const envSchema = z.object({
   PORT: z.string().or(z.number()).transform((val) => parseInt(val.toString(), 10)).default(3001),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_KEY: z.string().default("ORBIT_DEV_KEY_2026"),
+  // Optional: Orbitport API credentials for authenticated SpaceComputer access
+  // If not set, the system uses the free public IPFS beacon (fully functional)
+  ORBITPORT_CLIENT_ID: z.string().optional(),
+  ORBITPORT_CLIENT_SECRET: z.string().optional(),
+  // Frontend origin for CORS lockdown in production
+  ALLOWED_ORIGIN: z.string().default("*"),
 });
 
 export const env = (() => {

@@ -26,7 +26,7 @@ export function useTelemetryWebSocket() {
       reconnectionDelay: 2000,
       autoConnect: true,
       query: {
-        token: 'ORBIT_DEV_KEY_2026',
+        token: process.env.NEXT_PUBLIC_API_KEY || 'ORBIT_DEV_KEY_2026',
       },
     });
 

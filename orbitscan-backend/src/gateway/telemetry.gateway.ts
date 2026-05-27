@@ -11,7 +11,8 @@ import { env } from '../config/env.config';
 
 @WebSocketGateway({
   cors: {
-    origin: '*', // For local dev, allow all origins
+    origin: process.env.ALLOWED_ORIGIN || '*',
+    credentials: true,
   },
 })
 export class TelemetryGateway

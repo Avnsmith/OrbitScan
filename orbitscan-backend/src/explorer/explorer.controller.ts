@@ -67,15 +67,29 @@ export class ExplorerController {
       : await this.prisma.relay.findMany();
     const relay = relays.find((r: any) => r.id === artifact.relayId);
 
+    // Build a real attestation proof from stored beacon metadata.
+    // For SPACECOMPUTER_IPFS artifacts, the entropyHash IS the satellite-generated
+    // cTRNG value — verifiable by fetching the beacon and checking the ctrng array.
+    const isSpaceComputerSource =
+      artifact.source === 'SPACECOMPUTER_IPFS' ||
+      artifact.source === 'SPACECOMPUTER_API';
+
     return {
       ...artifact,
       relayName: relay ? relay.name : 'Unknown Relay',
       signalIntegrity: relay ? relay.signalIntegrity : 0.95,
       latency: relay ? relay.latency : 50,
       verificationProof: {
-        signature: '0x_proof_sig_' + cryptoSignature(artifact.entropyHash),
+        // entropyHash is the actual cTRNG hex from the satellite beacon
+        entropyOrigin: artifact.entropyHash,
+        source: artifact.source,
         signerRelay: artifact.relayId,
-        attestationRoot: '0x_attestation_root_' + cryptoSignature(artifact.id),
+        // Verifiable by checking beacon at:
+        // https://ipfs.io/ipns/k2k4r8lvomw737sajfnpav0dpeernugnryng50uheyk1k39lursmn09f
+        verifiable: isSpaceComputerSource,
+        beaconUrl: isSpaceComputerSource
+          ? 'https://ipfs.io/ipns/k2k4r8lvomw737sajfnpav0dpeernugnryng50uheyk1k39lursmn09f'
+          : null,
         attestationScore: relay ? Math.round(relay.uptime * 10) / 10 : 99.9,
       },
     };
@@ -192,15 +206,4 @@ export class ExplorerController {
       },
     };
   }
-}
-
-// Simple deterministic helper for signature hashes
-function cryptoSignature(input: string): string {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const char = input.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash;
-  }
-  return Math.abs(hash).toString(16).padEnd(16, 'f');
 }

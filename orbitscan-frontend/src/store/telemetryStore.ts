@@ -73,7 +73,7 @@ interface TelemetryState {
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 const API_HEADERS = {
-  'x-api-key': 'ORBIT_DEV_KEY_2026', // Phase 10: Secure REST Headers
+  'x-api-key': process.env.NEXT_PUBLIC_API_KEY || 'ORBIT_DEV_KEY_2026',
   'Content-Type': 'application/json',
 };
 
