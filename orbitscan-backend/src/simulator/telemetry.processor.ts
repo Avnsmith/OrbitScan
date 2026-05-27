@@ -87,14 +87,22 @@ export class TelemetryProcessor extends WorkerHost {
     }
   }
 
-  // DB abstraction helpers
   private async createArtifact(data: any): Promise<any> {
     if (this.prisma.isFallbackMode) {
+      // Avoid duplicate logs in memory array fallback
+      const exists = this.prisma.artifacts.find(a => a.entropyHash === data.entropyHash);
+      if (exists) return exists;
       this.prisma.artifacts.unshift(data);
       if (this.prisma.artifacts.length > 100) this.prisma.artifacts.pop();
       return data;
     }
-    return this.prisma.artifact.create({ data });
+    return this.prisma.artifact.upsert({
+      where: { entropyHash: data.entropyHash },
+      update: {
+        verificationStatus: data.verificationStatus,
+      },
+      create: data,
+    });
   }
 
   private async updateArtifactStatus(id: string, status: string): Promise<any> {
