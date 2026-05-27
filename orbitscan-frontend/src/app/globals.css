@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-graphite-950: #0b0c0e;
+  --color-graphite-900: #12151b;
+  --color-graphite-850: #161922;
+  --color-graphite-800: #1e2330;
+  --color-graphite-700: #2d3446;
+  --color-graphite-600: #424c65;
+  --color-graphite-400: #8895b3;
+  --color-orbital-cyan: #00f0ff;
+  --color-orbital-cyan-dim: rgba(0, 240, 255, 0.15);
+  --color-steel-blue: #527ba0;
+  --color-telemetry-green: #00e575;
+  --color-telemetry-amber: #ffb900;
+  --color-telemetry-red: #ff3b30;
+  
+  --font-sans: var(--font-ibm-sans), "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: var(--font-ibm-mono), "IBM Plex Mono", Menlo, Courier, monospace;
+}
+
+:root {
+  --background: #0b0c0e;
+  --foreground: #e2e8f0;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar - Operational style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #0b0c0e;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e2330;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #2d3446;
+}
+
+/* Aerospace / Mission Control scanlines grid backdrop */
+.telemetry-grid {
+  background-size: 40px 40px;
+  background-image: 
+    linear-gradient(to right, rgba(28, 35, 48, 0.3) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(28, 35, 48, 0.3) 1px, transparent 1px);
+}
+
+.telemetry-radar-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.telemetry-radar-sweep::after {
+  content: "";
+  position: absolute;
+  top: -150%;
+  left: -150%;
+  width: 400%;
+  height: 400%;
+  background: conic-gradient(
+    from 180deg,
+    transparent 70%,
+    rgba(0, 240, 255, 0.08) 95%,
+    rgba(0, 240, 255, 0.15) 100%
+  );
+  animation: sweep 12s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes sweep {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Terminal Cursor Blink */
+.cursor-blink::after {
+  content: "▋";
+  animation: blink 1s step-start infinite;
+  color: #00f0ff;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* Glassmorphism Panel */
+.glass-panel {
+  background: rgba(18, 21, 27, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(45, 52, 70, 0.5);
+}
+
+.glow-cyan {
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+}
+
+.border-glow-cyan {
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.15);
+}

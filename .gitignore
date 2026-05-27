@@ -1,0 +1,42 @@
+# Dependency directories
+node_modules/
+**/node_modules/
+
+# Next.js build output
+.next/
+**/.next/
+
+# NestJS build output
+dist/
+**/dist/
+
+# Local env files
+.env
+.env.local
+.env.production
+**/.env
+**/.env.local
+**/.env.production
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+**/*.log
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
+**/coverage/
+
+# IDE files
+.vscode/
+.idea/
+
+# Prisma client generated output cache (in node_modules)
+# (Generated automatically, no need to commit)

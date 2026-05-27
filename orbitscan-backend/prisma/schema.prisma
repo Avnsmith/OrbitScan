@@ -1,0 +1,42 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Artifact {
+  id                  String   @id @default(uuid())
+  entropyHash         String   @unique @map("entropy_hash")
+  entropyBits         Int      @map("entropy_bits")
+  relayId             String   @map("relay_id")
+  source              String
+  verificationStatus  String   @map("verification_status") // VERIFIED, PENDING, FAILED
+  createdAt           DateTime @default(now()) @map("created_at")
+
+  @@map("artifacts")
+}
+
+model Relay {
+  id              String   @id
+  name            String
+  status          String   // ACTIVE, DEGRADED, OFFLINE
+  latency         Int      // in ms
+  uptime          Float    // e.g. 99.98
+  signalIntegrity Float    @map("signal_integrity") // e.g. 0.95 (95%)
+  lastSeen        DateTime @default(now()) @map("last_seen")
+
+  @@map("relays")
+}
+
+model TelemetryLog {
+  id        String   @id @default(uuid())
+  timestamp DateTime @default(now())
+  category  String   // entropy, relay, signal, system
+  message   String
+  relayId   String?  @map("relay_id")
+
+  @@map("telemetry_logs")
+}
