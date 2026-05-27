@@ -38,9 +38,9 @@ OrbitScan is built with a deep commitment to high-density, institutional aesthet
 
 ## 🛠️ Key Technical Features
 
-1. **verifiable Entropy Provenance**:
-   - Live integration with the Cloudflare **League of Entropy (drand)** public randomness beacon.
-   - Robust timeout abort limits (1.8s), local memory caches, and resilient automatic cryptographic fallback modes (`crypto.randomBytes`) with precise telemetry source attribution.
+1. **Verifiable Cosmic Entropy Provenance**:
+   - Live integration with the official **@spacecomputer-io/orbitport-sdk-ts** to fetch orbital cTRNG randomness.
+   - Resilient multi-tier fallback querying decentralized IPFS beacons, the Cloudflare **League of Entropy (drand)** public beacon, and secure local cryptographic generators (`crypto.randomBytes`) with precise telemetry source attribution.
 2. **Resilient Background Processing**:
    - Employs **BullMQ** and **Redis** to ingest and process telemetry payloads.
    - Deploys multi-stage verification jobs: parses payload parameters, inserts telemetry logs, schedules delayed attestation validation workers, and manages real-time broadcast state.
@@ -134,9 +134,10 @@ The following live log trace demonstrates OrbitScan running in high-concurrency 
 
 ### Backend Services
 - **Framework**: NestJS (TypeScript)
+- **Ecosystem SDK**: **@spacecomputer-io/orbitport-sdk-ts** (Official Orbitport SDK)
 - **Database**: PostgreSQL (Prisma ORM)
 - **Caching & Queues**: Redis & BullMQ
-- **Verification**: Built-in crypto engines & drand Client
+- **Verification**: Built-in crypto engines, decentralized IPFS beacon clients & drand fallbacks
 - **Security**: @nestjs/throttler, custom Guards
 
 ### Frontend Console

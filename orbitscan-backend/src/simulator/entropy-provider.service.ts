@@ -1,5 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
+import { OrbitportSDK, BeaconService } from '@spacecomputer-io/orbitport-sdk-ts';
+import { env } from '../config/env.config';
 
 export interface EntropyPayload {
   entropyHash: string;
@@ -16,22 +18,37 @@ export interface EntropyPayload {
   };
 }
 
-// SpaceComputer public IPFS beacon — free, no credentials required
-const SC_BEACON_URL =
-  'https://ipfs.io/ipns/k2k4r8lvomw737sajfnpav0dpeernugnryng50uheyk1k39lursmn09f';
-
 // Fallback to Cloudflare's public drand beacon
 const DRAND_BEACON_URL = 'https://drand.cloudflare.com/public/latest';
 
 @Injectable()
 export class EntropyProviderService {
   private readonly logger = new Logger(EntropyProviderService.name);
+  private readonly sdk: OrbitportSDK;
+  private readonly beaconService: BeaconService;
   
   // Cache and locking state
   private cachedPayload: EntropyPayload | null = null;
   private lastIngestedRound: number | null = null;
   private isFetching = false;
   private fetchPromise: Promise<EntropyPayload> | null = null;
+
+  constructor() {
+    const config: any = {};
+    if (env.ORBITPORT_CLIENT_ID && env.ORBITPORT_CLIENT_SECRET) {
+      config.clientId = env.ORBITPORT_CLIENT_ID;
+      config.clientSecret = env.ORBITPORT_CLIENT_SECRET;
+    }
+    
+    // Initialize the official Orbitport SDK
+    this.sdk = new OrbitportSDK({ config, debug: false });
+    
+    // Initialize standard BeaconService for raw telemetry and comparison fallback
+    this.beaconService = new BeaconService({
+      gateway: 'https://ipfs.io',
+      apiUrl: 'https://ipfs.io',
+    }, false);
+  }
 
   async fetchEntropy(requestedBits: number): Promise<EntropyPayload> {
     // If a fetch is already running, reuse the active promise (concurrency locking)
@@ -51,36 +68,27 @@ export class EntropyProviderService {
   }
 
   private async doFetchEntropy(requestedBits: number): Promise<EntropyPayload> {
-    // Try SpaceComputer IPFS beacon first (always free, public)
+    // Try SpaceComputer IPFS beacon first via the official SDK
     try {
-      this.logger.log('Fetching live verifiable entropy from SpaceComputer IPFS beacon...');
+      this.logger.log('Fetching live verifiable entropy from SpaceComputer via official SDK...');
       
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3000);
-
-      const response = await fetch(SC_BEACON_URL, {
-        signal: controller.signal,
-        headers: { Accept: 'application/json' },
+      const beaconRes = await this.beaconService.getBeacon({
+        path: '/ipns/k2k4r8lvomw737sajfnpav0dpeernugnryng50uheyk1k39lursmn09f',
+        sources: ['gateway'],
+      }, {
+        timeout: 3000,
       });
 
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        throw new Error(`SpaceComputer IPFS HTTP ${response.status}`);
+      if (!beaconRes.success || !beaconRes.data) {
+        throw new Error('SpaceComputer SDK returned unsuccessful status');
       }
 
-      const raw = await response.json();
-
-      // Validate shape
-      if (
-        !raw?.data?.ctrng ||
-        !Array.isArray(raw.data.ctrng) ||
-        raw.data.ctrng.length === 0
-      ) {
-        throw new Error('Unexpected SpaceComputer beacon block shape');
+      const raw = beaconRes.data;
+      if (!('sequence' in raw) || !raw.ctrng || raw.ctrng.length === 0) {
+        throw new Error('Unexpected SpaceComputer beacon block shape from SDK');
       }
 
-      const sequence = raw.data.sequence;
+      const sequence = raw.sequence;
 
       // Prevent repeated ingestion of the same round/sequence ID
       if (this.lastIngestedRound !== null && sequence <= this.lastIngestedRound && this.cachedPayload) {
@@ -91,8 +99,8 @@ export class EntropyProviderService {
         };
       }
 
-      // Pick the first ctrng hex
-      const hexValue = raw.data.ctrng[0];
+      // Pick the first ctrng hex (safely casting the SDK type definition mismatch)
+      const hexValue = String(raw.ctrng[0]);
       const scaledHex = this.scaleHex(hexValue, requestedBits);
 
       const payload: EntropyPayload = {
@@ -120,7 +128,7 @@ export class EntropyProviderService {
     } catch (scError) {
       const scMsg = scError instanceof Error ? scError.message : String(scError);
       this.logger.warn(
-        `SpaceComputer IPFS beacon unreachable (${scMsg}). Falling back to drand beacon...`,
+        `SpaceComputer SDK fetch failed (${scMsg}). Falling back to drand beacon...`,
       );
 
       // Fallback 1: drand beacon (Cloudflare public latest)
