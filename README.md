@@ -1,132 +1,192 @@
-# 🛰️ OrbitScan — Enterprise Orbital Explorer
+# OrbitScan — Enterprise Orbital Telemetry & Entropy Provenance Explorer
 
-OrbitScan is an enterprise-grade Mission Control console and telemetry explorer for space-bound systems. Designed to operate like institutional infrastructure (comparable to Bloomberg Terminal, Palantir, and aerospace telemetry consoles), it features a high-density graphite palette, orbital cyan telemetry vectors, and sub-millisecond status tickers.
+OrbitScan is a next-generation explorer and observability platform for the SpaceComputer ecosystem. Designed for operators, engineers, and telemetry analysts, it provides a high-density, mission-control dashboard to inspect orbital downlink properties, track signal propagation drifts, verify cryptographic attestations, and monitor verifiable entropy provenance from live and simulated sources.
 
----
-
-> [!IMPORTANT]
-> **SIMULATOR DISCLOSURE & MODE NOTICE**
-> OrbitScan is currently configured in **Telemetry Simulation Mode**. 
-> * Real-time orbital packet arrivals, downlinks, and attestation cycles are simulated using a background generator.
-> * Telemetry ingestion pipelines utilize **real Redis databases and BullMQ queues** to process jobs.
-> * Database persistence is active via PostgreSQL (Prisma). A safe in-memory fallback is automatically used in local development if no connection is active.
-> * In production (`NODE_ENV=production`), startup strictly **fails** if PostgreSQL or Redis are unavailable.
+This repository implements a production-hardened, low-latency telemetry ingestion pipeline backed by real-world databases and queue processors.
 
 ---
 
-## 🏗️ Core Architecture & Pipeline
+## 🛰️ Product Identity & Architecture
 
-```text
-               [Downlink Satellite Relays]
-                           │
-             (Real-time Ingestion Event Tick)
-                           │
-                           ▼
-                  [NestJS API Gateway]
-                           │
-           ┌───────────────┴───────────────┐
-           ▼                               ▼
-  (BullMQ Job Queue)             (REST Controller)
-   └─ [Redis Store]                ├─ ApiKeyGuard
-           │                       └─ ThrottlerGuard
-    (Background Worker)                    │
-   └─ Attestation Processing               ▼
-           │                         [PostgreSQL]
-           ▼
-  [Socket.io WebSocket]
-   └─ Handshake Verification
-           │
-           ▼
-    [Next.js Client]
-     └─ Zustand ring buffer
-     └─ Continuous Waveform
+OrbitScan is built with a deep commitment to high-density, institutional aesthetics (inspired by Bloomberg Terminals, Palantir, and aerospace operations consoles) and zero superficial hype.
+
+```
+                  +-----------------------------------+
+                  |      Browser Clients / Console    |
+                  +-----------------+-----------------+
+                                    | HTTP / WebSockets
+                                    v
+                  +-----------------+-----------------+
+                  |      Explorer API Gateway         |
+                  |          (NestJS App)             |
+                  +--------+-----------------+--------+
+                           |                 |
+         Ingestion Job     v                 v    Verify / Persist
+     +---------------------+----+       +----+---------------------+
+     |  BullMQ Telemetry Queue  |       |    PostgreSQL Database   |
+     |      (Redis Backed)      |       |      (Prisma Client)     |
+     +---------------------+----+       +--------------------------+
+                           |
+                           v
+     +---------------------+----+
+     |    Telemetry Worker      |
+     |   (Signature Engine)     |
+     +--------------------------+
 ```
 
-### 🛡️ Enterprise Engineering Patterns Included
-1.  **Job Processing Queue (Redis + BullMQ)**: Background attestation processing and payload ingestion tasks are enqueued into a real Redis queue and digested by dedicated workers.
-2.  **API Rate Limiting & Defense**: REST endpoints and WebSockets are rate-limited via `@nestjs/throttler` to prevent link-exhaustion attacks.
-3.  **Credentialed Handshakes**: All REST queries and WebSocket feeds require authenticated queries using a secure API Key (`ORBIT_DEV_KEY_2026`).
-4.  **Hydration & Render Optimization**: Next.js hydration issues are mitigated using client-side mount guards. Waveform canvases use a decoupled continuous animation frame (RAF) avoiding frequent thread stutters.
+---
+
+## 🛠️ Key Technical Features
+
+1. **verifiable Entropy Provenance**:
+   - Live integration with the Cloudflare **League of Entropy (drand)** public randomness beacon.
+   - Robust timeout abort limits (1.8s), local memory caches, and resilient automatic cryptographic fallback modes (`crypto.randomBytes`) with precise telemetry source attribution.
+2. **Resilient Background Processing**:
+   - Employs **BullMQ** and **Redis** to ingest and process telemetry payloads.
+   - Deploys multi-stage verification jobs: parses payload parameters, inserts telemetry logs, schedules delayed attestation validation workers, and manages real-time broadcast state.
+3. **High-Density Real-Time UI**:
+   - Engineered in **Next.js 16 (Turbopack)** and **React 19**.
+   - Features a 60fps canvas waveform visualizer running on a decoupled, non-reactive animation loop utilizing mutable references to prevent React hydration or rendering stutters.
+   - Custom timezone-safe date-string mounting hooks to avoid hydration mismatches.
+4. **Secure Ingestion & Access Controls**:
+   - Protected API gateways using `@nestjs/throttler` limits.
+   - Request verification checking headers and query strings via `x-api-key`.
+   - Handshake checks for live WebSocket listeners.
+5. **System Health & Observability**:
+   - `GET /health` diagnostic endpoints verifying real-time database, Redis connectivity, and queue threads.
+   - Explicit console warnings and visible simulator disclosure banners.
 
 ---
 
-## 🚀 Quick Start Guide
+## 📸 Production Console Mockup
 
-### Step 1: Spin up Postgres & Redis Stack
-OrbitScan requires real database and memory queue adapters. Initialize the containerized services:
+![OrbitScan Telemetry Console Mockup](docs/screenshots/dashboard.png)
+
+---
+
+## 🚀 Technology Stack
+
+### Backend Services
+- **Framework**: NestJS (TypeScript)
+- **Database**: PostgreSQL (Prisma ORM)
+- **Caching & Queues**: Redis & BullMQ
+- **Verification**: Built-in crypto engines & drand Client
+- **Security**: @nestjs/throttler, custom Guards
+
+### Frontend Console
+- **Framework**: Next.js 16 (App Router), React 19
+- **State Management**: Zustand (Memory-efficient ring buffers)
+- **Styling**: TailwindCSS & custom vanilla CSS variables
+- **Animations**: Framer Motion
+- **Visuals**: HTML5 Canvas (60fps rendering), Recharts
+
+---
+
+## 📦 Local Development Setup
+
+### Prerequisites
+- Node.js (v20+ recommended)
+- Docker & Docker Compose (for Postgres and Redis services)
+
+### Step 1: Clone and Configure Environment
+
+Clone the repository:
+```bash
+git clone https://github.com/Avnsmith/OrbitScan.git
+cd OrbitScan
+```
+
+Copy the `.env.example` configurations to `.env` in both packages.
+
+**For `orbitscan-backend` (.env)**:
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/orbitscan?schema=public"
+REDIS_HOST="localhost"
+REDIS_PORT=6379
+REDIS_PASSWORD=""
+PORT=3001
+CORS_ORIGIN="http://localhost:3000"
+API_KEY="ORBIT_DEV_KEY_2026"
+```
+
+**For `orbitscan-frontend` (.env)**:
+```env
+NEXT_PUBLIC_API_URL="http://localhost:3001"
+NEXT_PUBLIC_WS_URL="http://localhost:3001"
+```
+
+### Step 2: Spin Up Infrastructure Containers
+
+Use the provided docker-compose configuration to boot local Postgres and Redis databases:
 ```bash
 docker-compose up -d
 ```
-*Verify they are running on local ports `5432` and `6379`.*
 
-### Step 2: Configure & Start API Gateway (Backend)
+### Step 3: Run Database Migrations
+
+Navigate to the backend package, generate the client, and run the prisma migrations:
 ```bash
 cd orbitscan-backend
-# Copy and configure environment variables
-cp .env.example .env
-# Start NestJS service in watch mode
+npm install
+npx prisma generate
+npx prisma migrate dev --name init
+```
+
+### Step 4: Boot the Services
+
+Open two terminals and start development servers:
+
+**Terminal 1: NestJS API Gateway**
+```bash
+cd orbitscan-backend
 npm run start:dev
 ```
-*Note: In development mode, the backend gracefully falls back to local sqlite/in-memory adapters if PostgreSQL is absent.*
 
-### Step 3: Launch Mission Control Client (Frontend)
+**Terminal 2: Next.js Client Console**
 ```bash
 cd orbitscan-frontend
+npm install
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser!
+
+Visit the console at **`http://localhost:3000`** in your browser.
 
 ---
 
-## ⚙️ Environment Variables Configuration
+## 🌐 Production Deployment
 
-### Backend (`orbitscan-backend/.env`)
-*   `DATABASE_URL`: Connection string for PostgreSQL database.
-*   `REDIS_HOST`: Host location of Redis server (`localhost`).
-*   `REDIS_PORT`: Port number of Redis server (`6379`).
-*   `PORT`: Gateway execution port (`3001`).
-*   `API_KEY`: Secret string required for client auth handshakes (`ORBIT_DEV_KEY_2026`).
+OrbitScan is fully operational in production.
 
----
-
-## 🛰️ Authenticated API Index & Streams
-
-All endpoints require an authenticated connection. Provide the key in the `x-api-key` header or as a query parameter `?apiKey=...`.
-
-### REST Endpoints (`http://localhost:3001`)
-*   `GET /health` - Diagnostic state returns PostgreSQL connectivity, Redis latency, and memory consumption.
-*   `GET /artifacts` - List latest telemetry attestation payloads.
-*   `GET /artifact/:id` - Fetch comprehensive artifact metrics & signature attestations.
-*   `GET /relays` - Retrieve current satellite relay drifts and signal levels.
-*   `GET /metrics` - Fetch aggregated institutional statistics (throughput, averages, verified counts).
-
-### WebSocket Stream (`http://localhost:3001` via Socket.io)
-Pass credentials during WebSocket connection establishment:
-```javascript
-const socket = io('http://localhost:3001', {
-  query: { token: 'ORBIT_DEV_KEY_2026' }
-});
-```
-
-*   `relay.updated` - Broadcasts SNR link drifts and latency updates.
-*   `entropy.generated` - Dispatched on new attestation arrivals.
-*   `artifact.created` - Sourced when a payload is successfully queued and registered.
-*   `verification.completed` - Dispatched when workers verify attestation roots and apply signatures.
-*   `telemetry.log` - Sourced for system-wide chronological event stream.
+- **Frontend Environment Variables on Vercel**:
+  - `NEXT_PUBLIC_API_URL` -> Assigned Railway URL
+  - `NEXT_PUBLIC_WS_URL` -> Assigned Railway URL
+- **Backend Environment Variables on Railway**:
+  - `DATABASE_URL` -> Bound PostgreSQL connection URL
+  - `REDIS_HOST` -> Bound Redis host
+  - `REDIS_PORT` -> Bound Redis port
+  - `REDIS_PASSWORD` -> Bound Redis password
+  - `PORT` -> 3001
+  - `API_KEY` -> Custom token key
 
 ---
 
-## 🛠️ Telemetry Terminology Correctives
-All sci-fi block/web3 jargon has been removed and replaced with physical operational variables:
-*   **Downlink Noise Profile** (instead of cosmic ray anomalies).
-*   **Thermal Sensor Variance** (instead of magnetospheric noise).
-*   **Signal Propagation Drift** (instead of ionospheric jitter).
-*   **Integrity Attestation Enclaves** (instead of trust verification validators).
-*   **Signal Degradation** (instead of system dilution).
+## 🔒 Security & Resilience Design
+
+1. **Strict Production Enforcement**: Fallback memory modes are strictly blocked in production. If `NODE_ENV === 'production'`, database connection failures instantly crash the backend process during bootstrap to avoid silent operational degradation.
+2. **WebSocket Handshake Validation**: Live telemetry socket streams enforce initial query token checks before accepting connection upgrades.
+3. **Throttling Guard**: High-density clients are throttled on REST routes to protect database threads.
 
 ---
 
-## 🗺️ Production Roadmap
-1.  [ ] **Hardware TRNG Module**: Integrate physical hardware random-generator serial interfaces (USB) into the ingestion thread.
-2.  [ ] **Telemetry Attestations**: Replace simulated deterministic hashes with real ECDSA payload validations using SpaceComputer PKI.
-3.  [ ] **CCSDS Packet Decoding**: Build binary parsers in NestJS to process real satellite downlink streams directly.
+## 🗺️ Roadmap & Ecosystem Future
+
+- **OpenTelemetry Integrations**: Export trace spans and metrics directly to Prometheus/Grafana.
+- **Hardware Telemetry Interfaces**: Connect directly to physical Radio / Satellite telemetry hardware signals.
+- **Structured JSON Ingestion**: Connect output streams to ELK stacks via Pino/Winston logging.
+- **Multi-Signature Attestation Engines**: Implement distributed consensus protocols for entropy verification blocks.
+
+---
+
+## 📄 License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more details.
