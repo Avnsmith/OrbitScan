@@ -6,6 +6,12 @@
     "orbitscan-backend",
     "orbitscan-frontend"
   ],
+  "scripts": {
+    "build:shared": "npm run build --workspace=packages/shared-types",
+    "build:frontend": "npm run build --workspace=orbitscan-frontend",
+    "build:backend": "npm run build --workspace=orbitscan-backend",
+    "build": "npm run build:shared && npm run build:frontend && npm run build:backend"
+  },
   "dependencies": {
     "next": "16.2.6",
     "react": "19.2.4",

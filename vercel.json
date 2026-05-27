@@ -1,5 +1,5 @@
 {
-  "buildCommand": "npm run build --workspace=packages/shared-types && npm run build --workspace=orbitscan-frontend",
+  "buildCommand": "npm run build:shared && npm run build:frontend",
   "outputDirectory": "orbitscan-frontend/.next",
   "framework": "nextjs"
 }
