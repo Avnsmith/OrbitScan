@@ -12,10 +12,13 @@ export interface Artifact {
   signalIntegrity?: number;
   latency?: number;
   verificationProof?: {
-    signature: string;
+    signature?: string;
     signerRelay: string;
-    attestationRoot: string;
     attestationScore: number;
+    entropyOrigin?: string;
+    source?: string;
+    verifiable?: boolean;
+    beaconUrl?: string | null;
   };
 }
 
