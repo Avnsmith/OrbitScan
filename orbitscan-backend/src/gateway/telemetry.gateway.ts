@@ -8,6 +8,13 @@ import {
 import { Server, Socket } from 'socket.io';
 import { Logger } from '@nestjs/common';
 import { env } from '../config/env.config';
+import { 
+  Artifact, 
+  Relay, 
+  TelemetryPayload, 
+  VerificationCompletedEvent, 
+  TelemetryLog 
+} from '@orbitscan/shared-types';
 
 @WebSocketGateway({
   cors: {
@@ -44,23 +51,23 @@ export class TelemetryGateway
   }
 
   // Broadcasters
-  broadcastEntropyGenerated(data: any) {
+  broadcastEntropyGenerated(data: TelemetryPayload) {
     this.server.emit('entropy.generated', data);
   }
 
-  broadcastArtifactCreated(data: any) {
+  broadcastArtifactCreated(data: Artifact) {
     this.server.emit('artifact.created', data);
   }
 
-  broadcastRelayUpdated(data: any) {
+  broadcastRelayUpdated(data: Relay) {
     this.server.emit('relay.updated', data);
   }
 
-  broadcastVerificationCompleted(data: any) {
+  broadcastVerificationCompleted(data: VerificationCompletedEvent) {
     this.server.emit('verification.completed', data);
   }
 
-  broadcastTelemetryLog(data: any) {
+  broadcastTelemetryLog(data: TelemetryLog) {
     this.server.emit('telemetry.log', data);
   }
 }

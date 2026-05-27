@@ -1,0 +1,23 @@
+{
+  "name": "@orbitscan/shared-types",
+  "version": "1.0.0",
+  "description": "Centralized, production-safe shared types for OrbitScan telemetry pipeline",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

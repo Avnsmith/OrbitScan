@@ -5,6 +5,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TelemetryGateway } from '../gateway/telemetry.gateway';
 import * as crypto from 'crypto';
 import { Logger } from '@nestjs/common';
+import { Artifact } from '@orbitscan/shared-types';
 
 @Processor('telemetry-ingestion')
 export class TelemetryProcessor extends WorkerHost {
@@ -100,7 +101,7 @@ export class TelemetryProcessor extends WorkerHost {
     }
   }
 
-  private async createArtifact(data: any): Promise<any> {
+  private async createArtifact(data: any): Promise<Artifact> {
     if (this.prisma.isFallbackMode) {
       // Avoid duplicate logs in memory array fallback
       const exists = this.prisma.artifacts.find(a => a.entropyHash === data.entropyHash);
@@ -120,13 +121,14 @@ export class TelemetryProcessor extends WorkerHost {
     } catch (err: any) {
       if (err.code === 'P2002' || err.message?.includes('Unique constraint failed')) {
         this.logger.warn(`Database race condition: duplicate entropy_hash detected (entropyHash: ${data.entropyHash}). Skipping gracefully.`);
-        return this.prisma.artifact.findUnique({ where: { entropyHash: data.entropyHash } });
+        const existingRecord = await this.prisma.artifact.findUnique({ where: { entropyHash: data.entropyHash } });
+        return existingRecord || data;
       }
       throw err;
     }
   }
 
-  private async updateArtifactStatus(id: string, status: string): Promise<any> {
+  private async updateArtifactStatus(id: string, status: string): Promise<Artifact | null> {
     if (this.prisma.isFallbackMode) {
       const art = this.prisma.artifacts.find(a => a.id === id);
       if (art) {

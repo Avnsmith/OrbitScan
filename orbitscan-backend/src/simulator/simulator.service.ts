@@ -5,6 +5,7 @@ import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
 import { EntropyProviderService } from './entropy-provider.service';
 import * as crypto from 'crypto';
+import { TelemetryPayload } from '@orbitscan/shared-types';
 
 @Injectable()
 export class SimulatorService implements OnModuleInit, OnModuleDestroy {
@@ -107,14 +108,14 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     
     const artifactId = 'ART-' + Math.floor(100000 + Math.random() * 900000);
 
-    const entropyEvent = {
+    const entropyEvent: TelemetryPayload = {
       timestamp: new Date(),
       relayId: relay.id,
       relayName: relay.name,
       bits: payload.bits,
       source: payload.source,
       entropyHash: payload.entropyHash,
-      signalState: relay.signalIntegrity >= 0.9 ? 'STABLE' : relay.signalIntegrity >= 0.7 ? 'FLUCTUATING' : 'DEGRADED',
+      signalState: (relay.signalIntegrity >= 0.9 ? 'STABLE' : relay.signalIntegrity >= 0.7 ? 'FLUCTUATING' : 'DEGRADED') as 'STABLE' | 'FLUCTUATING' | 'DEGRADED',
     };
     
     // Broadcast initial generation immediately

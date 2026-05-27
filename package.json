@@ -1,0 +1,9 @@
+{
+  "name": "orbitscan-monorepo",
+  "private": true,
+  "workspaces": [
+    "packages/*",
+    "orbitscan-backend",
+    "orbitscan-frontend"
+  ]
+}

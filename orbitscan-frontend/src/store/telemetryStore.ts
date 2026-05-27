@@ -1,53 +1,6 @@
 import { create } from 'zustand';
 
-export interface Artifact {
-  id: string;
-  entropyHash: string;
-  entropyBits: number;
-  relayId: string;
-  source: string;
-  verificationStatus: string;
-  createdAt: string;
-  relayName?: string;
-  signalIntegrity?: number;
-  latency?: number;
-  verificationProof?: {
-    signature?: string;
-    signerRelay: string;
-    attestationScore: number;
-    entropyOrigin?: string;
-    source?: string;
-    verifiable?: boolean;
-    beaconUrl?: string | null;
-  };
-}
-
-export interface Relay {
-  id: string;
-  name: string;
-  status: string;
-  latency: number;
-  uptime: number;
-  signalIntegrity: number;
-  lastSeen: string;
-}
-
-export interface TelemetryLog {
-  id: string;
-  timestamp: string;
-  category: string;
-  message: string;
-  relayId?: string;
-}
-
-export interface Metrics {
-  totalEntropyGenerated: number;
-  activeEntropyRelays: number;
-  averageResponseLatency: number;
-  verifiedEntropyRate: number;
-  totalRequests: number;
-  totalVerified: number;
-}
+import { Artifact, Relay, TelemetryLog, Metrics } from '@orbitscan/shared-types';
 
 interface TelemetryState {
   artifacts: Artifact[];

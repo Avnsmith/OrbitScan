@@ -1,6 +1,7 @@
 import { Controller, Get, Param, Query, NotFoundException, UseGuards, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { ApiKeyGuard } from '../auth/api-key.guard';
+import { Artifact, Relay, TelemetryLog, Metrics, HealthStatus } from '@orbitscan/shared-types';
 
 @Controller()
 @UseGuards(ApiKeyGuard)
@@ -13,7 +14,7 @@ export class ExplorerController {
   async getArtifacts(
     @Query('search') search?: string,
     @Query('limit') limit = 50,
-  ) {
+  ): Promise<Artifact[]> {
     const limitNum = Number(limit);
     if (this.prisma.isFallbackMode) {
       let filtered = [...this.prisma.artifacts];
@@ -47,7 +48,7 @@ export class ExplorerController {
   }
 
   @Get('artifact/:id')
-  async getArtifactById(@Param('id') id: string) {
+  async getArtifactById(@Param('id') id: string): Promise<Artifact> {
     let artifact: any;
 
     if (this.prisma.isFallbackMode) {
@@ -96,7 +97,7 @@ export class ExplorerController {
   }
 
   @Get('entropy/:hash')
-  async getArtifactByHash(@Param('hash') hash: string) {
+  async getArtifactByHash(@Param('hash') hash: string): Promise<Artifact> {
     let artifact: any;
 
     if (this.prisma.isFallbackMode) {
@@ -117,7 +118,7 @@ export class ExplorerController {
   }
 
   @Get('relays')
-  async getRelays() {
+  async getRelays(): Promise<Relay[]> {
     if (this.prisma.isFallbackMode) {
       return this.prisma.relays;
     }
@@ -125,7 +126,7 @@ export class ExplorerController {
   }
 
   @Get('telemetry/live')
-  async getTelemetryLive(@Query('limit') limit = 100) {
+  async getTelemetryLive(@Query('limit') limit = 100): Promise<TelemetryLog[]> {
     const limitNum = Number(limit);
     if (this.prisma.isFallbackMode) {
       return this.prisma.telemetryLogs.slice(0, limitNum);
@@ -137,7 +138,7 @@ export class ExplorerController {
   }
 
   @Get('metrics')
-  async getMetrics() {
+  async getMetrics(): Promise<Metrics> {
     const relays = this.prisma.isFallbackMode
       ? this.prisma.relays
       : await this.prisma.relay.findMany();
@@ -182,7 +183,7 @@ export class ExplorerController {
 
   // Phase 11: GET /health observability diagnostic endpoint
   @Get('health')
-  async getHealth() {
+  async getHealth(): Promise<HealthStatus> {
     let databaseStatus = 'ONLINE';
     if (this.prisma.isFallbackMode) {
       databaseStatus = 'OFFLINE_FALLBACK_ACTIVE';
