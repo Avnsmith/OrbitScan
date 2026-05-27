@@ -3,6 +3,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { TelemetryGateway } from '../gateway/telemetry.gateway';
 import { Queue } from 'bullmq';
 import { InjectQueue } from '@nestjs/bullmq';
+import { EntropyProviderService } from './entropy-provider.service';
 import * as crypto from 'crypto';
 
 @Injectable()
@@ -14,6 +15,7 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     private readonly prisma: PrismaService,
     private readonly telemetryGateway: TelemetryGateway,
     @InjectQueue('telemetry-ingestion') private readonly telemetryQueue: Queue,
+    private readonly entropyProvider: EntropyProviderService,
   ) {}
 
   onModuleInit() {
@@ -99,23 +101,19 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
 
   private async generateEntropyCycle(relay: any) {
     const bits = Math.random() < 0.3 ? 512 : 256;
-    const entropyHash = '0x' + crypto.randomBytes(bits / 8).toString('hex');
-    const sourceTypes = [
-      'DOWNLINK_NOISE_PROFILE', 
-      'THERMAL_SENSOR_VARIANCE', 
-      'SOLAR_RADIATION_FLUX', 
-      'SIGNAL_PROPAGATION_DRIFT'
-    ];
-    const source = sourceTypes[Math.floor(Math.random() * sourceTypes.length)];
+    
+    // Ingest using verifiable entropy provider (drand public beacon or secure local fallback)
+    const payload = await this.entropyProvider.fetchEntropy(bits);
+    
     const artifactId = 'ART-' + Math.floor(100000 + Math.random() * 900000);
 
     const entropyEvent = {
       timestamp: new Date(),
       relayId: relay.id,
       relayName: relay.name,
-      bits,
-      source,
-      entropyHash,
+      bits: payload.bits,
+      source: payload.source,
+      entropyHash: payload.entropyHash,
       signalState: relay.signalIntegrity >= 0.9 ? 'STABLE' : relay.signalIntegrity >= 0.7 ? 'FLUCTUATING' : 'DEGRADED',
     };
     
@@ -124,17 +122,17 @@ export class SimulatorService implements OnModuleInit, OnModuleDestroy {
     
     await this.createLog(
       'entropy',
-      `Telemetry Attestation Request Ingested: ${bits}-bit payload sourced from ${source.replace(/_/g, ' ')}`,
+      `Telemetry Attestation Ingested: ${payload.bits}-bit payload sourced from ${payload.source.replace(/_/g, ' ')}`,
       relay.id
     );
 
     // Enqueue job into BullMQ queue. Resilient processing handles DB insertions and verification steps.
     await this.telemetryQueue.add('ingest-payload', {
       artifactId,
-      entropyHash,
-      bits,
+      entropyHash: payload.entropyHash,
+      bits: payload.bits,
       relayId: relay.id,
-      source,
+      source: payload.source,
     });
   }
 

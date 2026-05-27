@@ -178,8 +178,17 @@ export default function ArtifactDetailPage() {
             {/* Source Origin */}
             <div className="bg-graphite-900/60 border border-graphite-800/80 p-4 rounded flex flex-col relative glass-panel">
               <span className="text-[9px] text-steel-blue font-mono uppercase tracking-wider">HARNESS SOURCE TYPE</span>
-              <span className="text-sm font-extrabold font-mono text-slate-300 mt-2.5 truncate uppercase">
+              <span className="text-sm font-extrabold font-mono text-slate-300 mt-2.5 truncate uppercase flex items-center gap-1.5">
                 {selectedArtifact.source.replace(/_/g, ' ')}
+                {selectedArtifact.source === 'LIVE_DRAND_BEACON' ? (
+                  <span className="px-1.5 py-0.5 text-[7px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 rounded uppercase font-bold tracking-wider animate-pulse">
+                    LIVE BEACON
+                  </span>
+                ) : (
+                  <span className="px-1.5 py-0.5 text-[7px] bg-amber-950/80 text-amber-500 border border-amber-800/80 rounded uppercase font-bold tracking-wider">
+                    SIMULATED
+                  </span>
+                )}
               </span>
               <span className="text-[8px] text-graphite-500 font-mono mt-1 uppercase">Telemetry Payload Variance</span>
             </div>

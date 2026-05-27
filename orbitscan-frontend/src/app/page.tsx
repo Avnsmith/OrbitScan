@@ -532,11 +532,18 @@ export default function MissionControlDashboard() {
                           <td className="py-3 px-3 text-orbital-cyan font-semibold">
                             {art.entropyBits}
                           </td>
-                          <td className="py-3 px-3 text-slate-300">
+                          <td className="py-3 px-3 text-slate-300 font-mono">
                             {art.relayId}
                           </td>
-                          <td className="py-3 px-3 text-slate-400 text-[10px]">
-                            {art.source.replace(/_/g, ' ')}
+                          <td className="py-3 px-3 text-[10px]">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-slate-400 uppercase">{art.source.replace(/_/g, ' ')}</span>
+                              {art.source === 'LIVE_DRAND_BEACON' ? (
+                                <span className="inline-block w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse" title="Verifiable Live Beacon Source"></span>
+                              ) : (
+                                <span className="inline-block w-1.5 h-1.5 bg-amber-500/80 rounded-full" title="Telemetry Simulator Source"></span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3 px-3">
                             <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider ${
@@ -637,7 +644,20 @@ export default function MissionControlDashboard() {
                     </div>
                     <div className="flex justify-between items-center text-[10px]">
                       <span className="text-graphite-500">Telemetry Source:</span>
-                      <span className="font-semibold text-slate-200 uppercase">{selectedArtifact.source.replace(/_/g, ' ')}</span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="font-semibold text-slate-200 uppercase">{selectedArtifact.source.replace(/_/g, ' ')}</span>
+                        {selectedArtifact.source === 'LIVE_DRAND_BEACON' ? (
+                          <span className="px-1 py-0.5 text-[8px] bg-emerald-950/80 text-emerald-400 border border-emerald-800/80 rounded uppercase font-bold tracking-wider animate-pulse flex items-center gap-1">
+                            <span className="w-1 h-1 bg-emerald-400 rounded-full"></span>
+                            LIVE BEACON
+                          </span>
+                        ) : (
+                          <span className="px-1 py-0.5 text-[8px] bg-amber-950/80 text-amber-500 border border-amber-800/80 rounded uppercase font-bold tracking-wider flex items-center gap-1">
+                            <span className="w-1 h-1 bg-amber-500 rounded-full"></span>
+                            SIMULATED
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex justify-between items-center text-[10px]">
                       <span className="text-graphite-500">Payload bits size:</span>

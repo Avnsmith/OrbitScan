@@ -6,6 +6,7 @@ import { ExplorerController } from './explorer/explorer.controller';
 import { BullModule } from '@nestjs/bullmq';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { TelemetryProcessor } from './simulator/telemetry.processor';
+import { EntropyProviderService } from './simulator/entropy-provider.service';
 import { env } from './config/env.config';
 
 @Module({
@@ -31,6 +32,7 @@ import { env } from './config/env.config';
     TelemetryGateway,
     SimulatorService,
     TelemetryProcessor,
+    EntropyProviderService,
   ],
 })
 export class AppModule {}
