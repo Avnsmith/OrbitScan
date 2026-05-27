@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useTelemetryStore } from '../store/telemetryStore';
 
-const SOCKET_URL = 'http://localhost:3001';
+const SOCKET_URL = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3001';
 
 export function useTelemetryWebSocket() {
   const socketRef = useRef<Socket | null>(null);
