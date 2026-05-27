@@ -14,8 +14,8 @@ This document outlines the engineering path to scale OrbitScan from an enterpris
 
 ## Phase 2: Live Integrations (Completed)
 - [x] Abstract `EntropyProvider` interface
-- [x] Real-world integration with **League of Entropy (drand)** public beacon
-- [x] Robust timeout aborts, caching, and automatic cryptographically secure local fallback mode
+- [x] Real-world integration with the official **@spacecomputer-io/orbitport-sdk-ts** for orbital cosmic entropy
+- [x] Robust multi-tier fallback to decentralized IPFS beacons, Cloudflare League of Entropy (drand), and local cryptographic fallback engines
 - [x] Live vs Simulated UI badges in explorer dashboard and artifact page
 
 ## Phase 3: Enterprise Observability & Trace Logging (Q3 2026)
