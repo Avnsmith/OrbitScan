@@ -130,6 +130,42 @@ The following live log trace demonstrates OrbitScan running in high-concurrency 
 
 ---
 
+## 📦 Monorepo Architecture & Workspace Strategy
+
+OrbitScan is structured as a production-grade npm workspaces monorepo to ensure strict type safety and prevent schema drift between backend telemetry ingestion services and frontend visualization consoles.
+
+```text
+/
+├── packages
+│   └── shared-types          # Centralized TS contracts & API payloads (dist/index.js, dist/index.d.ts)
+├── orbitscan-backend         # NestJS Telemetry Ingest App
+├── orbitscan-frontend        # Next.js 16 Telemetry Console
+├── package.json              # Root workspace configuration
+└── vercel.json               # Hardened Vercel monorepo deployment config
+```
+
+### 1. Centralized Typed Contracts (`@orbitscan/shared-types`)
+All key schemas, interfaces, and DTO contracts are declared in a single source of truth at `packages/shared-types`. This includes:
+- **`TelemetryPayload`**: Structure of telemetry data fetched from beacons.
+- **`Artifact` & `VerificationProof`**: Cryptographic provenance schemas.
+- **`RelayState` & `HealthStatus`**: Live component health parameters.
+- **`SocketPayload`**: Type-safe WebSocket messaging interfaces.
+
+Any change to the schemas in `@orbitscan/shared-types` propagates instantly, causing build-time compilation typechecks on both the frontend and backend, preventing runtime drift completely.
+
+### 2. Consolidated Build Pipeline & Build Ordering
+Local development, Vercel, and Railway all use a deterministic, sequential build order:
+1. **Build Shared Package** (`tsc` compiles and outputs to `packages/shared-types/dist/`)
+2. **Build Web Applications** (Next.js and NestJS compile using references to the built types)
+
+This is executed using unified, workspace-aware root scripts:
+- `npm run build:shared` — Compiles the shared types.
+- `npm run build:frontend` — Compiles the Next.js frontend console.
+- `npm run build:backend` — Compiles the NestJS backend API.
+- `npm run build` — Runs the full sequence in order.
+
+---
+
 ## 🚀 Technology Stack
 
 ### Backend Services
@@ -189,31 +225,27 @@ Use the provided docker-compose configuration to boot local Postgres and Redis d
 docker-compose up -d
 ```
 
-### Step 3: Run Database Migrations
+### Step 3: Run Database Migrations & Code Generation
 
-Navigate to the backend package, generate the client, and run the prisma migrations:
+Generate the Prisma client and execute the migrations from the root using workspace commands:
 ```bash
-cd orbitscan-backend
-npm install
-npx prisma generate
-npx prisma migrate dev --name init
+npm run build:shared
+npx prisma generate --schema=orbitscan-backend/prisma/schema.prisma
+npx prisma migrate dev --name init --schema=orbitscan-backend/prisma/schema.prisma
 ```
 
 ### Step 4: Boot the Services
 
-Open two terminals and start development servers:
+Run the development servers concurrently using workspace commands:
 
 **Terminal 1: NestJS API Gateway**
 ```bash
-cd orbitscan-backend
-npm run start:dev
+npm run start:dev --workspace=orbitscan-backend
 ```
 
 **Terminal 2: Next.js Client Console**
 ```bash
-cd orbitscan-frontend
-npm install
-npm run dev
+npm run dev --workspace=orbitscan-frontend
 ```
 
 Visit the console at **`http://localhost:3000`** in your browser.
