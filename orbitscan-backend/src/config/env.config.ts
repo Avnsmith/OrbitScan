@@ -9,6 +9,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().url("DATABASE_URL must be a valid connection string"),
   REDIS_HOST: z.string().default("localhost"),
   REDIS_PORT: z.string().or(z.number()).transform((val) => parseInt(val.toString(), 10)).default(6379),
+  REDIS_PASSWORD: z.string().optional(),
   PORT: z.string().or(z.number()).transform((val) => parseInt(val.toString(), 10)).default(3001),
   NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
   API_KEY: z.string().default("ORBIT_DEV_KEY_2026"),
